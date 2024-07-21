@@ -1,6 +1,14 @@
 import * as THREE from "three";
+import * as CANNON from "cannon-es";
+import {
+  world,
+  createPaddlePhysicsBody,
+  createPuckPhysicsBody,
+  addGroundPlane,
+} from "./physics";
 import { createLights } from "./lighting";
 import { createPaddle, createPuck } from "./shapes";
+import { createCamera } from "./cameras";
 
 function main() {
   const canvas = document.querySelector("canvas") as HTMLCanvasElement;
@@ -12,81 +20,37 @@ function main() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
 
-  const fov = 75;
-  const aspect = window.innerWidth / window.innerHeight;
-  const near = 0.1;
-  const far = 1000;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  camera.position.set(0, 10, 5); // Position the camera above and at an angle to the table
-  camera.lookAt(0, 0, 0); // Look at the origin
+  const camera = createCamera();
 
   const scene = new THREE.Scene();
   scene.background = null; // transparent
 
   createLights(scene);
 
+  addGroundPlane(world); // Add invisible ground plane to the physics world
+
+  // Create paddles and puck with physics
   const paddle1 = createPaddle();
   paddle1.position.set(-3, 0.1, 0);
   scene.add(paddle1);
+  const paddle1Body = createPaddlePhysicsBody(paddle1.position);
+  world.addBody(paddle1Body);
 
   const paddle2 = createPaddle();
   paddle2.position.set(3, 0.1, 0);
   scene.add(paddle2);
+  const paddle2Body = createPaddlePhysicsBody(paddle2.position);
+  world.addBody(paddle2Body);
 
   const puck = createPuck();
   puck.position.set(0, 0.1, 0);
   scene.add(puck);
+  const puckBody = createPuckPhysicsBody(puck.position);
+  world.addBody(puckBody);
 
-  const paddleSpeed = 0.1;
-  const canvasWidth = canvas.width;
-  const canvasHeight = canvas.height;
-
-  const halfTableWidth = canvasWidth / 2;
-  const halfTableDepth = canvasHeight / 2;
-
-  const movement = {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-  };
-
-  function onKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "ArrowUp":
-        movement.up = true;
-        break;
-      case "ArrowDown":
-        movement.down = true;
-        break;
-      case "ArrowLeft":
-        movement.left = true;
-        break;
-      case "ArrowRight":
-        movement.right = true;
-        break;
-    }
-  }
-
-  function onKeyUp(event: KeyboardEvent) {
-    switch (event.key) {
-      case "ArrowUp":
-        movement.up = false;
-        break;
-      case "ArrowDown":
-        movement.down = false;
-        break;
-      case "ArrowLeft":
-        movement.left = false;
-        break;
-      case "ArrowRight":
-        movement.right = false;
-        break;
-    }
-  }
-
-  window.addEventListener("keydown", onKeyDown);
-  window.addEventListener("keyup", onKeyUp);
+  document.addEventListener("mousemove", (event) =>
+    handleMouseMove(event, camera, canvas, paddle1, paddle1Body)
+  );
 
   function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
     const canvas = renderer.domElement;
@@ -97,35 +61,21 @@ function main() {
     if (needResize) {
       renderer.setSize(width, height, false);
     }
-
     return needResize;
   }
 
-  function updatePaddlePosition() {
-    if (movement.up) {
-      paddle1.position.z = Math.max(
-        -halfTableDepth,
-        paddle1.position.z - paddleSpeed
-      );
-    }
-    if (movement.down) {
-      paddle1.position.z = Math.min(
-        halfTableDepth,
-        paddle1.position.z + paddleSpeed
-      );
-    }
-    if (movement.left) {
-      paddle1.position.x = Math.max(
-        -halfTableWidth,
-        paddle1.position.x - paddleSpeed
-      );
-    }
-    if (movement.right) {
-      paddle1.position.x = Math.min(
-        halfTableWidth,
-        paddle1.position.x + paddleSpeed
-      );
-    }
+  function updatePhysics() {
+    world.step(1 / 60); // 60 FPS
+
+    // Update Three.js objects based on Cannon.js physics bodies
+    paddle1.position.copy(paddle1Body.position);
+    paddle1.quaternion.copy(paddle1Body.quaternion);
+
+    paddle2.position.copy(paddle2Body.position);
+    paddle2.quaternion.copy(paddle2Body.quaternion);
+
+    puck.position.copy(puckBody.position);
+    puck.quaternion.copy(puckBody.quaternion);
   }
 
   function render(time: number) {
@@ -137,13 +87,37 @@ function main() {
       camera.updateProjectionMatrix();
     }
 
-    updatePaddlePosition();
-
+    updatePhysics();
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
 
   requestAnimationFrame(render);
+}
+
+function handleMouseMove(
+  event: MouseEvent,
+  camera: THREE.Camera,
+  canvas: HTMLCanvasElement,
+  paddle: THREE.Object3D,
+  paddleBody: CANNON.Body
+) {
+  const canvasBounds = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - canvasBounds.left;
+  const mouseY = event.clientY - canvasBounds.top;
+
+  const normalizedX = (mouseX / canvasBounds.width) * 2 - 1;
+  const normalizedY = -(mouseY / canvasBounds.height) * 2 + 1;
+
+  const vector = new THREE.Vector3(normalizedX, normalizedY, 0.5);
+  vector.unproject(camera);
+
+  const dir = vector.sub(camera.position).normalize();
+  const distance = -camera.position.y / dir.y;
+  const position = camera.position.clone().add(dir.multiplyScalar(distance));
+
+  paddle.position.set(position.x, 0.1, position.z);
+  paddleBody.position.set(position.x, 0.1, position.z);
 }
 
 main();

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { createPaddleMaterial, createPuckMaterial } from "../materials";
 
+export const PADDLE_BASE = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 32);
+
 export function createPaddle() {
   const baseGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 32);
   const baseMaterial = createPaddleMaterial();
@@ -32,7 +34,33 @@ export function createPaddle() {
 }
 
 export function createPuck() {
-  const geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 32);
-  const material = createPuckMaterial();
-  return new THREE.Mesh(geometry, material);
+  const puckGroup = new THREE.Group();
+
+  const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.02, 32);
+  const bodyMaterial = createPuckMaterial();
+  const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+
+  const topBorderGeometry = new THREE.CylinderGeometry(0.32, 0.32, 0.005, 32);
+  const topBorderMaterial = createPuckMaterial();
+  const topBorderMesh = new THREE.Mesh(topBorderGeometry, topBorderMaterial);
+  topBorderMesh.position.y = 0.0125; // Positioned slightly above the body
+
+  const bottomBorderGeometry = new THREE.CylinderGeometry(
+    0.32,
+    0.32,
+    0.005,
+    32
+  );
+  const bottomBorderMaterial = createPuckMaterial();
+  const bottomBorderMesh = new THREE.Mesh(
+    bottomBorderGeometry,
+    bottomBorderMaterial
+  );
+  bottomBorderMesh.position.y = -0.0125; // Positioned slightly below the body
+
+  puckGroup.add(bodyMesh);
+  puckGroup.add(topBorderMesh);
+  puckGroup.add(bottomBorderMesh);
+
+  return puckGroup;
 }
