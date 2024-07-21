@@ -37,57 +37,56 @@ function main() {
   puck.position.set(0, 0.1, 0);
   scene.add(puck);
 
-  let selectedPaddle: THREE.Object3D | null = null;
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+  const paddleSpeed = 0.1;
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
 
-  function onMouseDown(event: MouseEvent) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  const halfTableWidth = canvasWidth / 2;
+  const halfTableDepth = canvasHeight / 2;
 
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects([paddle1, paddle2], true);
+  const movement = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+  };
 
-    if (intersects.length > 0) {
-      selectedPaddle = intersects[0].object.parent; // Select the parent Group object
+  function onKeyDown(event: KeyboardEvent) {
+    switch (event.key) {
+      case "ArrowUp":
+        movement.up = true;
+        break;
+      case "ArrowDown":
+        movement.down = true;
+        break;
+      case "ArrowLeft":
+        movement.left = true;
+        break;
+      case "ArrowRight":
+        movement.right = true;
+        break;
     }
   }
 
-  function onMouseMove(event: MouseEvent) {
-    if (selectedPaddle) {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects([puck]);
-
-      if (intersects.length > 0) {
-        const intersect = intersects[0];
-        const newX = intersect.point.x;
-        const newZ = intersect.point.z;
-
-        // Restrict movement within the bounds of the table
-        const halfTableWidth = 2.5; // tableWidth / 2
-        const halfTableDepth = 1.5; // tableDepth / 2
-        selectedPaddle.position.x = Math.max(
-          -halfTableWidth,
-          Math.min(halfTableWidth, newX)
-        );
-        selectedPaddle.position.z = Math.max(
-          -halfTableDepth,
-          Math.min(halfTableDepth, newZ)
-        );
-      }
+  function onKeyUp(event: KeyboardEvent) {
+    switch (event.key) {
+      case "ArrowUp":
+        movement.up = false;
+        break;
+      case "ArrowDown":
+        movement.down = false;
+        break;
+      case "ArrowLeft":
+        movement.left = false;
+        break;
+      case "ArrowRight":
+        movement.right = false;
+        break;
     }
   }
 
-  function onMouseUp() {
-    selectedPaddle = null;
-  }
-
-  window.addEventListener("mousedown", onMouseDown);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup", onKeyUp);
 
   function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
     const canvas = renderer.domElement;
@@ -102,6 +101,33 @@ function main() {
     return needResize;
   }
 
+  function updatePaddlePosition() {
+    if (movement.up) {
+      paddle1.position.z = Math.max(
+        -halfTableDepth,
+        paddle1.position.z - paddleSpeed
+      );
+    }
+    if (movement.down) {
+      paddle1.position.z = Math.min(
+        halfTableDepth,
+        paddle1.position.z + paddleSpeed
+      );
+    }
+    if (movement.left) {
+      paddle1.position.x = Math.max(
+        -halfTableWidth,
+        paddle1.position.x - paddleSpeed
+      );
+    }
+    if (movement.right) {
+      paddle1.position.x = Math.min(
+        halfTableWidth,
+        paddle1.position.x + paddleSpeed
+      );
+    }
+  }
+
   function render(time: number) {
     time *= 0.001;
 
@@ -110,6 +136,8 @@ function main() {
       camera.aspect = canvas.clientWidth / canvas.clientHeight;
       camera.updateProjectionMatrix();
     }
+
+    updatePaddlePosition();
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);
