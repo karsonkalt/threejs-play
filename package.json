@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "cannon-es": "^0.20.0",
+    "cannon-es-debugger": "^1.0.0",
     "lite-server": "^2.6.1",
     "three": "^0.166.1",
     "ts-loader": "^9.5.1",
