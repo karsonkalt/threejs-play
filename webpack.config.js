@@ -1,14 +1,14 @@
 const path = require("path");
 
 module.exports = {
-  mode: "development", // Or 'production'
-  entry: "./src/index.ts", // Adjust if your entry file is different
+  mode: "development",
+  entry: "./src/index.ts",
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "./public/dist"),
   },
   resolve: {
-    extensions: [".ts", ".tsx", ".js"], // Add '.js' and '.jsx' if needed
+    extensions: [".ts", ".tsx", ".js"],
   },
   module: {
     rules: [
@@ -19,5 +19,4 @@ module.exports = {
       },
     ],
   },
-  // Add other configurations (e.g., devServer) here
 };

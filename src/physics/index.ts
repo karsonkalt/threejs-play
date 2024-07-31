@@ -1,87 +1,160 @@
 import * as CANNON from "cannon-es";
 import * as THREE from "three";
+import { PhysicsObject } from "../PhysicsObject";
 
 export const world = new CANNON.World();
-world.gravity.set(0, -9.82, 0); // Adjust gravity as needed
+world.gravity.set(0, -9.82, 0);
 world.broadphase = new CANNON.NaiveBroadphase();
 
 export function toCanonVec3(v: THREE.Vector3) {
   return new CANNON.Vec3(v.x, v.y, v.z);
 }
 
-export function createPaddlePhysicsBody(position: CANNON.Vec3) {
-  const shape = new CANNON.Cylinder(0.5, 0.5, 0.6, 16); // Slightly increased height
-  const body = new CANNON.Body({ mass: 50 }); // Set mass to 5 for better interaction
+export function createPaddlePhysicsObject(
+  position: THREE.Vector3
+): PhysicsObject {
+  const shape = new CANNON.Cylinder(0.5, 0.5, 0.6, 32);
+  const body = new CANNON.Body({ mass: 50 });
   body.addShape(shape);
-  body.position.copy(position);
-  body.fixedRotation = false; // Allow rotation, but we will lock it using constraints
-  body.quaternion.setFromEuler(0, 0, 0); // Ensure the cylinder is upright
-  body.material = new CANNON.Material({ friction: 1.0, restitution: 0.1 }); // Adjust material for less bounciness
-  body.angularDamping = 1; // Increased angular damping to reduce spins
-  return body;
+  body.position.copy(toCanonVec3(position));
+  body.material = new CANNON.Material({ friction: 1.0, restitution: 0.1 });
+  body.angularDamping = 1;
+
+  const geometry = new THREE.CylinderGeometry(0.5, 0.5, 0.3, 32);
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    roughness: 0.1,
+    metalness: 0.0,
+    reflectivity: 1,
+    sheen: 0.5,
+    clearcoat: 1,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.position.copy(position);
+
+  return new PhysicsObject(mesh, body);
 }
 
-export function createPuckPhysicsBody(position: CANNON.Vec3) {
-  const shape = new CANNON.Cylinder(0.4, 0.4, 0.25, 16);
-  const body = new CANNON.Body({ mass: 1 }); // Increased mass
+export function createPuckPhysicsObject(
+  position: THREE.Vector3
+): PhysicsObject {
+  const shape = new CANNON.Cylinder(0.4, 0.4, 0.25, 32);
+  const body = new CANNON.Body({ mass: 50 });
   body.addShape(shape);
-  body.position.copy(position);
-  body.quaternion.setFromEuler(0, Math.PI / 2, 0); // Align the cylinder upright
-  body.linearDamping = 0.0;
-  body.material = new CANNON.Material({ friction: 0.5, restitution: 0.0 }); // High restitution for bounciness
-  body.angularDamping = 1; // Increased angular damping to reduce spins
-  return body;
+  body.position.copy(toCanonVec3(position));
+  body.quaternion.setFromEuler(0, Math.PI / 2, 0);
+  body.material = new CANNON.Material({ friction: 0.5, restitution: 0.0 });
+  body.angularDamping = 1;
+
+  const geometry = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 32);
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xff0000,
+    roughness: 0.1,
+    metalness: 0.0,
+    reflectivity: 1,
+    sheen: 0.5,
+    clearcoat: 1,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.position.copy(position);
+
+  return new PhysicsObject(mesh, body);
 }
 
 export function addGroundPlane(world: CANNON.World) {
   const groundShape = new CANNON.Plane();
   const groundBody = new CANNON.Body({ mass: 0 });
   groundBody.addShape(groundShape);
-  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Rotate to be horizontal
+  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
   groundBody.material = new CANNON.Material({
     friction: 0.0,
     restitution: 0.2,
-  }); // High restitution for bounciness
+  });
   world.addBody(groundBody);
 }
 
-interface WallOptions {
-  width: number;
-  depth: number;
-  wallHeight: number;
-  wallThickness: number;
+function createWall(
+  world: CANNON.World,
+  scene: THREE.Scene,
+  width: number,
+  height: number,
+  depth: number,
+  position: CANNON.Vec3,
+  color: number
+): void {
+  const shape = new CANNON.Box(
+    new CANNON.Vec3(width / 2, height / 2, depth / 2)
+  );
+  const body = new CANNON.Body({ mass: 0 });
+  body.addShape(shape);
+  body.position.copy(position);
+  world.addBody(body);
+
+  const geometry = new THREE.BoxGeometry(width, 2, depth);
+  const material = new THREE.MeshStandardMaterial({ color });
+  const mesh = new THREE.Mesh(geometry, material);
+
+  mesh.position.set(body.position.x, 0, body.position.z);
+
+  scene.add(mesh);
 }
 
-export function addEnclosedArea(
+export function addWalls(
   world: CANNON.World,
-  options: WallOptions
+  scene: THREE.Scene,
+  canvas: HTMLCanvasElement
 ): void {
-  const { width, depth, wallHeight, wallThickness } = options;
-  const halfExtentsX = width / 2;
-  const halfExtentsZ = depth / 2;
+  const wallThickness = 1;
+  const width = canvas.clientWidth / 120;
+  const height = canvas.clientHeight / 120;
+  const wallHeight = 50;
+  const color = 0x00ff00;
 
-  const positions = [
-    { x: 0, y: wallHeight / 2, z: halfExtentsZ }, // front wall
-    { x: 0, y: wallHeight / 2, z: -halfExtentsZ }, // back wall
-    { x: halfExtentsX, y: wallHeight / 2, z: 0 }, // right wall
-    { x: -halfExtentsX, y: wallHeight / 2, z: 0 }, // left wall
-  ];
+  // Top
+  createWall(
+    world,
+    scene,
+    width * 2,
+    wallHeight,
+    wallThickness,
+    new CANNON.Vec3(0, wallHeight / 2, height + wallThickness),
+    color
+  );
 
-  const sizes = [
-    { x: width, y: wallHeight, z: wallThickness }, // front and back walls
-    { x: wallThickness, y: wallHeight, z: depth }, // left and right walls
-  ];
+  // Bottom
+  createWall(
+    world,
+    scene,
+    width * 2,
+    wallHeight,
+    wallThickness,
+    new CANNON.Vec3(0, wallHeight / 2, -height - wallThickness),
+    color
+  );
 
-  positions.forEach((position, index) => {
-    const size = index < 2 ? sizes[0] : sizes[1];
-    const wallShape = new CANNON.Box(
-      new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2)
-    );
-    const wallBody = new CANNON.Body({
-      mass: 0, // Static wall
-      position: new CANNON.Vec3(position.x, position.y, position.z),
-      shape: wallShape,
-    });
-    world.addBody(wallBody);
-  });
+  // Left
+  createWall(
+    world,
+    scene,
+    wallThickness,
+    wallHeight,
+    height * 2,
+    new CANNON.Vec3(-width - wallThickness, wallHeight / 2, 0),
+    color
+  );
+
+  // Right
+  createWall(
+    world,
+    scene,
+    wallThickness,
+    wallHeight,
+    height * 2,
+    new CANNON.Vec3(width + wallThickness, wallHeight / 2, 0),
+    color
+  );
 }

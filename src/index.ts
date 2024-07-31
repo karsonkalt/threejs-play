@@ -1,25 +1,23 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 import {
   world,
-  createPaddlePhysicsBody,
-  createPuckPhysicsBody,
+  createPaddlePhysicsObject,
+  createPuckPhysicsObject,
   addGroundPlane,
-  toCanonVec3,
-  addEnclosedArea,
+  addWalls,
 } from "./physics";
 import { createLights } from "./lighting";
-import { createPaddle, createPuck } from "./shapes";
 import { createCamera } from "./cameras";
+import { PhysicsObject } from "./PhysicsObject";
 
 function main() {
   const canvas = document.querySelector("canvas") as HTMLCanvasElement;
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     canvas,
-    alpha: true,
+    // alpha: true,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
@@ -27,52 +25,42 @@ function main() {
   const camera = createCamera();
 
   const scene = new THREE.Scene();
-  scene.background = null; // transparent
+  // scene.background = null;
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; // Enable damping (inertia)
-  controls.dampingFactor = 0.25; // Damping factor
-  controls.screenSpacePanning = false; // Do not allow panning in screen space
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.25;
+  controls.screenSpacePanning = false;
 
-  // @ts-ignore
-  const cannonDebugger = new CannonDebugger(scene, world, {}) as any;
+  //@ts-ignore
+  // const cannonDebugger = new CannonDebugger(scene, world, {}) as any;
 
   createLights(scene);
 
-  addGroundPlane(world); // Add invisible ground plane to the physics world
+  addGroundPlane(world);
 
-  // Create paddles and puck with physics
-  const paddle1 = createPaddle();
-  paddle1.position.set(-3, 1, 0);
-  scene.add(paddle1);
-  const paddle1Body = createPaddlePhysicsBody(toCanonVec3(paddle1.position));
-  world.addBody(paddle1Body);
+  const paddle1 = createPaddlePhysicsObject(new THREE.Vector3(-3, 1, 0));
+  scene.add(paddle1.mesh);
+  world.addBody(paddle1.body);
 
-  const paddle2 = createPaddle();
-  paddle2.position.set(3, 1, 0);
-  scene.add(paddle2);
-  const paddle2Body = createPaddlePhysicsBody(toCanonVec3(paddle2.position));
-  world.addBody(paddle2Body);
+  const paddle2 = createPaddlePhysicsObject(new THREE.Vector3(3, 1, 0));
+  scene.add(paddle2.mesh);
+  world.addBody(paddle2.body);
 
-  const puck = createPuck();
-  puck.position.set(0, 1, 0);
-  scene.add(puck);
-  const puckBody = createPuckPhysicsBody(toCanonVec3(puck.position));
-  world.addBody(puckBody);
+  const puck = createPuckPhysicsObject(new THREE.Vector3(0, 1, 0));
+  scene.add(puck.mesh);
+  world.addBody(puck.body);
 
-  addEnclosedArea(world, {
-    width: 20,
-    depth: 20,
-    wallHeight: 3,
-    wallThickness: 1,
-  });
+  addWalls(world, scene, canvas);
 
   document.addEventListener("mousemove", (event) =>
-    handleMouseMove(event, camera, canvas, paddle1, paddle1Body)
+    handleMouseMove(event, camera, canvas, paddle1)
   );
 
-  document.addEventListener("click", (event) => {
-    addPuck(event, camera, canvas, scene);
+  const addPuckButton = document.querySelector("#add-puck")!;
+
+  addPuckButton.addEventListener("click", (event) => {
+    addPuck(camera, canvas, scene);
   });
 
   function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
@@ -88,17 +76,8 @@ function main() {
   }
 
   function updatePhysics() {
-    world.step(1 / 60); // 60 FPS
-
-    // Update Three.js objects based on Cannon.js physics bodies
-    paddle1.position.copy(paddle1Body.position);
-    paddle1.quaternion.copy(paddle1Body.quaternion);
-
-    paddle2.position.copy(paddle2Body.position);
-    paddle2.quaternion.copy(paddle2Body.quaternion);
-
-    puck.position.copy(puckBody.position);
-    puck.quaternion.copy(puckBody.quaternion);
+    world.step(1 / 60);
+    PhysicsObject.updateAll();
   }
 
   function render(time: number) {
@@ -110,7 +89,7 @@ function main() {
       camera.updateProjectionMatrix();
     }
 
-    cannonDebugger.update();
+    // cannonDebugger.update();
 
     updatePhysics();
     renderer.render(scene, camera);
@@ -121,38 +100,22 @@ function main() {
 }
 
 function addPuck(
-  event: MouseEvent,
   camera: THREE.Camera,
   canvas: HTMLCanvasElement,
   scene: THREE.Scene
 ) {
-  const canvasBounds = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - canvasBounds.left;
-  const mouseY = event.clientY - canvasBounds.top;
-
-  const normalizedX = (mouseX / canvasBounds.width) * 2 - 1;
-  const normalizedY = -(mouseY / canvasBounds.height) * 2 + 1;
-
-  const vector = new THREE.Vector3(normalizedX, normalizedY, 0.5);
-  vector.unproject(camera);
-
-  const dir = vector.sub(camera.position).normalize();
-  const distance = -camera.position.y / dir.y;
-  const position = camera.position.clone().add(dir.multiplyScalar(distance));
-
-  const puck = createPuck();
-  puck.position.set(position.x, 0, position.z);
-  const puckBody = createPuckPhysicsBody(toCanonVec3(puck.position));
-  world.addBody(puckBody);
-  scene.add(puck);
+  const randomX = Math.random() * 2 - 1;
+  const randomZ = Math.random() * 2 - 1;
+  const puck = createPuckPhysicsObject(new THREE.Vector3(randomX, 1, randomZ));
+  scene.add(puck.mesh);
+  world.addBody(puck.body);
 }
 
 function handleMouseMove(
   event: MouseEvent,
   camera: THREE.Camera,
   canvas: HTMLCanvasElement,
-  paddle: THREE.Object3D,
-  paddleBody: CANNON.Body
+  paddle: PhysicsObject
 ) {
   const canvasBounds = canvas.getBoundingClientRect();
   const mouseX = event.clientX - canvasBounds.left;
@@ -167,12 +130,12 @@ function handleMouseMove(
   const dir = vector.sub(camera.position).normalize();
   const distance = -camera.position.y / dir.y;
   const position = camera.position.clone().add(dir.multiplyScalar(distance));
-  const currentPaddleY = paddle.position.y;
+  const currentPaddleY = paddle.mesh.position.y;
 
-  paddle.position.set(position.x, currentPaddleY, position.z);
-  paddleBody.velocity.set(0, 0, 0);
-  paddleBody.angularVelocity.set(0, 0, 0);
-  paddleBody.position.set(position.x, currentPaddleY, position.z);
+  paddle.mesh.position.set(position.x, currentPaddleY, position.z);
+  paddle.body.velocity.set(0, 0, 0);
+  paddle.body.angularVelocity.set(0, 0, 0);
+  paddle.body.position.set(position.x, currentPaddleY, position.z);
 }
 
 main();
