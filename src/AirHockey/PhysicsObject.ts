@@ -4,7 +4,7 @@ import * as CANNON from "cannon-es";
 export class PhysicsObject {
   private static instances: PhysicsObject[] = [];
 
-  constructor(public mesh: THREE.Mesh, public body: CANNON.Body) {
+  constructor(public mesh: THREE.Mesh | THREE.Group, public body: CANNON.Body) {
     PhysicsObject.instances.push(this);
   }
 
