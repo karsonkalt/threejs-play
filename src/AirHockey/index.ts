@@ -4,7 +4,7 @@ import CannonDebugger from "cannon-es-debugger";
 import * as CANNON from "cannon-es";
 import {
   world,
-  createPaddlePhysicsObject,
+  Paddle,
   createPuckPhysicsObject,
   addGroundPlane,
   addWalls,
@@ -34,23 +34,31 @@ export function AirHockey() {
   controls.screenSpacePanning = false;
 
   //@ts-ignore
-  const cannonDebugger = new CannonDebugger(scene, world, {}) as any;
+  // const cannonDebugger = new CannonDebugger(scene, world, {}) as any;
 
   createLights(scene);
-
   addGroundPlane(world, scene);
 
-  const paddle1 = createPaddlePhysicsObject(new THREE.Vector3(-3, 1, 0));
+  const playableArea = addWalls(world, scene, canvas);
+  const leftX = playableArea.minX;
+  const rightX = playableArea.maxX;
+  const midX = (playableArea.minX + playableArea.maxX) / 2;
+
+  const paddle1 = new Paddle(new THREE.Vector3(-3, 1, 0), {
+    minLeft: leftX,
+    maxRight: midX,
+  });
   scene.add(paddle1.mesh);
   world.addBody(paddle1.body);
 
-  const paddle2 = createPaddlePhysicsObject(new THREE.Vector3(3, 1, 0));
+  const paddle2 = new Paddle(new THREE.Vector3(3, 1, 0), {
+    minLeft: midX,
+    maxRight: rightX,
+  });
   scene.add(paddle2.mesh);
   world.addBody(paddle2.body);
 
   addPuck(camera, canvas, scene);
-
-  addWalls(world, scene, canvas);
 
   const controlsElement = document.querySelector("#controls")!;
   const addPuckButton = document.createElement("button");
@@ -61,10 +69,6 @@ export function AirHockey() {
   addPuckButton.addEventListener("click", (event) => {
     addPuck(camera, canvas, scene);
   });
-
-  // document.addEventListener("mousemove", (event) =>
-  //   handleMouseMove(event, camera, canvas, paddle1)
-  // );
 
   function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
     const canvas = renderer.domElement;
@@ -92,7 +96,7 @@ export function AirHockey() {
       camera.updateProjectionMatrix();
     }
 
-    cannonDebugger.update();
+    // cannonDebugger.update();
 
     handleMovement(paddle1, "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight");
     handleMovement(paddle2, "w", "s", "a", "d");
@@ -123,33 +127,6 @@ function addPuck(
 
   scene.add(puck.mesh);
   world.addBody(puck.body);
-}
-
-function handleMouseMove(
-  event: MouseEvent,
-  camera: THREE.Camera,
-  canvas: HTMLCanvasElement,
-  paddle: PhysicsObject
-) {
-  const canvasBounds = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - canvasBounds.left;
-  const mouseY = event.clientY - canvasBounds.top;
-
-  const normalizedX = (mouseX / canvasBounds.width) * 2 - 1;
-  const normalizedY = -(mouseY / canvasBounds.height) * 2 + 1;
-
-  const vector = new THREE.Vector3(normalizedX, normalizedY, 0.5);
-  vector.unproject(camera);
-
-  const dir = vector.sub(camera.position).normalize();
-  const distance = -camera.position.y / dir.y;
-  const position = camera.position.clone().add(dir.multiplyScalar(distance));
-  const currentPaddleY = paddle.mesh.position.y;
-
-  paddle.mesh.position.set(position.x, currentPaddleY, position.z);
-  paddle.body.velocity.set(0, 0, 0);
-  paddle.body.angularVelocity.set(0, 0, 0);
-  paddle.body.position.set(position.x, currentPaddleY, position.z);
 }
 
 const keysPressed: { [key: string]: boolean } = {};
