@@ -98,8 +98,8 @@ export function AirHockey() {
 
     // cannonDebugger.update();
 
-    handleMovement(paddle1, "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight");
-    handleMovement(paddle2, "w", "s", "a", "d");
+    handleMovement(paddle1, "w", "s", "a", "d");
+    handleMovement(paddle2, "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight");
 
     updatePhysics();
     renderer.render(scene, camera);
@@ -117,13 +117,15 @@ function addPuck(
   // Drop slightly off center
   const dropX = Math.random() * 2 - 1;
   const dropZ = Math.random() * 2 - 1;
-  const puck = createPuckPhysicsObject(new THREE.Vector3(dropX, 1, dropZ));
+  const puck = createPuckPhysicsObject(new THREE.Vector3(dropX, 3, dropZ));
 
-  const [spinX, spinY, spinZ] = Array.from(
+  // In from an angle
+  const [dirX, dirY, dirZ] = Array.from(
     { length: 3 },
     () => Math.random() * 2 - 1
   );
-  puck.body.velocity.set(spinX, spinY, spinZ);
+  puck.body.velocity.set(dirX, dirY, dirZ);
+  puck.body.angularVelocity.set(0, 0, Math.random() * 3 - 1);
 
   scene.add(puck.mesh);
   world.addBody(puck.body);
