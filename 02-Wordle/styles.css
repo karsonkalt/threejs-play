@@ -1,0 +1,29 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.word-row {
+    text-align: center;
+    margin-top: 1em;
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+}
+
+.letter-cell {
+    border-radius: 8px;
+    height: 100px;
+    width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 4em;
+    font-family: sans-serif;
+    background: rgba(232, 232, 232, 0.8);
+    text-transform: uppercase;
+    user-select: none;
+}
