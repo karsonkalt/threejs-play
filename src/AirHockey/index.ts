@@ -91,6 +91,7 @@ export function AirHockey() {
     time *= 0.001;
 
     if (resizeRendererToDisplaySize(renderer)) {
+      console.log("resize");
       const canvas = renderer.domElement;
       camera.aspect = canvas.clientWidth / canvas.clientHeight;
       camera.updateProjectionMatrix();
