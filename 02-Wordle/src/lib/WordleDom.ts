@@ -1,8 +1,6 @@
 import { LetterFeedback, LetterStatus } from "./types";
 import { Wordle } from "./Wordle";
-import isWord from "is-word";
 
-const englishWords = isWord("american-english");
 export class WordleDOM {
   private game: Wordle;
   private currentGuess: string;
@@ -25,7 +23,6 @@ export class WordleDOM {
     this.gameBoard = document.createElement("div");
     this.gameBoard.id = "game-board";
 
-    // Create 6 rows, each with 5 letter boxes
     for (let i = 0; i < 6; i++) {
       const row = document.createElement("div");
       row.className = "row";
@@ -42,7 +39,6 @@ export class WordleDOM {
     document.body.appendChild(this.gameBoard);
   }
 
-  // Create a message area
   private createMessageArea() {
     this.message = document.createElement("div");
     this.message.id = "message";
@@ -51,7 +47,6 @@ export class WordleDOM {
     document.body.appendChild(this.message);
   }
 
-  // Handle key presses
   private listenForKeyPresses() {
     document.addEventListener("keydown", (event) => {
       if (this.game.gameState.isGameOver) return;
@@ -67,7 +62,6 @@ export class WordleDOM {
     });
   }
 
-  // Add a letter to the current guess
   private addLetter(letter: string) {
     this.currentGuess += letter;
     const currentRow = this.gameBoard.children[
@@ -78,7 +72,6 @@ export class WordleDOM {
     letterBox.textContent = letter.toUpperCase();
   }
 
-  // Remove the last letter from the current guess
   private removeLastLetter() {
     if (this.currentGuess.length > 0) {
       const currentRow = this.gameBoard.children[
@@ -93,19 +86,13 @@ export class WordleDOM {
     }
   }
 
-  // Submit the current guess
   private submitGuess() {
     if (this.currentGuess.length !== 5) {
       this.message.textContent = "Guess must be 5 letters long.";
       return;
     }
 
-    if (!englishWords.check(this.currentGuess)) {
-      this.message.textContent = "Invalid word";
-      return;
-    }
-
-    const currentRowBeforeSubmit = this.currentRow; // Capture the current row before making the guess
+    const currentRowBeforeSubmit = this.currentRow;
 
     const feedback = this.game.makeGuess(this.currentGuess);
     this.updateGameBoard(feedback, currentRowBeforeSubmit);
@@ -117,11 +104,10 @@ export class WordleDOM {
         this.message.textContent = `Game Over! The word was "${this.game.gameState.solution}".`;
       }
     } else {
-      this.currentGuess = ""; // Reset the guess for the next row
+      this.currentGuess = "";
     }
   }
 
-  // Update the game board with feedback
   private updateGameBoard(feedback: LetterFeedback[], row: HTMLElement) {
     const letterBoxes = row.childNodes;
     feedback.forEach((item, index) => {
