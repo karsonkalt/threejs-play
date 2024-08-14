@@ -15,8 +15,12 @@ export class WordleDOM {
     this.listenForKeyPresses();
   }
 
-  private get currentRow() {
-    return this.gameBoard.children[this.game.currentRow];
+  private get currentRow(): HTMLElement {
+    return this.gameBoard.children[this.game.currentRow] as HTMLElement;
+  }
+
+  private get currentLetterBoxes(): HTMLCollectionOf<Element> {
+    return this.currentRow.getElementsByClassName("letter-box");
   }
 
   private createGameBoard() {
@@ -33,10 +37,10 @@ export class WordleDOM {
         row.appendChild(letterBox);
       }
 
-      this.gameBoard.appendChild(row);
+      gameBoard.appendChild(row);
     }
 
-    document.body.appendChild(this.gameBoard);
+    document.body.appendChild(gameBoard);
     return gameBoard;
   }
 
@@ -45,7 +49,7 @@ export class WordleDOM {
     message.id = "message";
     message.style.marginTop = "20px";
     message.style.fontSize = "1.2rem";
-    document.body.appendChild(this.message);
+    document.body.appendChild(message);
 
     return message;
   }
@@ -67,15 +71,17 @@ export class WordleDOM {
 
   private addLetter(letter: string) {
     this.currentGuess += letter;
-    const letterBoxes = this.currentRow.getElementsByClassName("letter-box");
-    const letterBox = letterBoxes[this.currentGuess.length - 1] as HTMLElement;
+    const letterBox = this.currentLetterBoxes[
+      this.currentGuess.length - 1
+    ] as HTMLElement;
     letterBox.textContent = letter.toUpperCase();
   }
 
   private removeLastLetter() {
     if (this.currentGuess.length > 0) {
-      const letterBoxes = this.currentRow.getElementsByClassName("letter-box");
-      const letterBox = letterBoxes[this.currentGuess.length - 1];
+      const letterBox = this.currentLetterBoxes[
+        this.currentGuess.length - 1
+      ] as HTMLElement;
       letterBox.textContent = ""; // Clear the letter box
       this.currentGuess = this.currentGuess.slice(0, -1);
     }
@@ -103,7 +109,7 @@ export class WordleDOM {
     }
   }
 
-  private updateGameBoard(feedback: LetterFeedback[], row: Element) {
+  private updateGameBoard(feedback: LetterFeedback[], row: HTMLElement) {
     const letterBoxes = row.childNodes;
     feedback.forEach((item, index) => {
       const letterBox = letterBoxes[index] as HTMLElement;

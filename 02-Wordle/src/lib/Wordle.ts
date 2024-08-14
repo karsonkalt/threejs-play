@@ -4,9 +4,9 @@ import { validKeys } from "./utils";
 export class Wordle {
   private state: GameState;
 
-  constructor(word: string, maxAttempts: number = 6) {
+  constructor(solution: string, maxAttempts: number = 6) {
     this.state = {
-      solution: word.toLowerCase(),
+      solution: solution.toLowerCase(),
       attempts: 0,
       maxAttempts: maxAttempts,
       history: [],
