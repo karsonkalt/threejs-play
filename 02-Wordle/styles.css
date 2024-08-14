@@ -5,25 +5,46 @@ body {
     height: 100vh;
 }
 
-.word-row {
-    text-align: center;
-    margin-top: 1em;
-    display: flex;
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(5, 50px);
+    grid-template-rows: repeat(6, 50px);
+    grid-gap: 5px;
     justify-content: center;
-    gap: 1em;
+    align-content: center;
 }
 
-.letter-cell {
-    border-radius: 8px;
-    height: 100px;
-    width: 100px;
+.row {
+    display: contents;
+}
+
+.letter-box {
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    font-size: 4em;
-    font-family: sans-serif;
-    background: rgba(232, 232, 232, 0.8);
+    font-size: 1.5rem;
+    border: 1px solid #000;
     text-transform: uppercase;
-    user-select: none;
+}
+
+.correct {
+    background-color: green;
+    color: white;
+}
+
+.present {
+    background-color: yellow;
+    color: black;
+}
+
+.absent {
+    background-color: gray;
+    color: white;
+}
+
+#message {
+    margin-top: 20px;
+    font-size: 1.2rem;
 }
