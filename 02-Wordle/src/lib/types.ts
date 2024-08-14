@@ -11,6 +11,7 @@ export interface LetterFeedback {
 
 export interface GameState {
   solution: string;
+  currentGuess: string;
   attempts: number;
   maxAttempts: number;
   history: LetterFeedback[][];

@@ -12,22 +12,44 @@ export class Wordle {
       history: [],
       isGameOver: false,
       isWin: false,
+      currentGuess: "",
     };
   }
 
-  public makeGuess(guess: string): LetterFeedback[] {
+  public addLetter(letter: string): void {
     if (this.state.isGameOver) {
       throw new Error("Game is already over.");
     }
 
-    guess = guess.toLowerCase();
-    if (guess.length !== this.state.solution.length) {
+    if (!validKeys.includes(letter)) {
+      throw new Error("Invalid key.");
+    }
+
+    this.state.currentGuess += letter.toLowerCase();
+  }
+
+  public removeLetter(): void {
+    if (this.state.isGameOver) {
+      throw new Error("Game is already over.");
+    }
+
+    this.state.currentGuess = this.state.currentGuess.slice(0, -1);
+  }
+
+  public makeGuess(): LetterFeedback[] {
+    if (this.state.isGameOver) {
+      throw new Error("Game is already over.");
+    }
+
+    if (this.state.currentGuess.length !== this.state.solution.length) {
       throw new Error(
         `Guess must be ${this.state.solution.length} letters long.`
       );
     }
 
-    const feedback: LetterFeedback[] = this.evaluateGuess(guess);
+    const feedback: LetterFeedback[] = this.evaluateGuess(
+      this.state.currentGuess
+    );
     this.state.history.push(feedback);
     this.state.attempts++;
 

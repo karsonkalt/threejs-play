@@ -3,13 +3,11 @@ import { Wordle } from "./Wordle";
 
 export class WordleDOM {
   private game: Wordle;
-  private currentGuess: string;
   private gameBoard: HTMLElement;
   private message: HTMLElement;
 
   constructor(word: string) {
     this.game = new Wordle(word);
-    this.currentGuess = "";
     this.gameBoard = this.createGameBoard();
     this.message = this.createMessageArea();
     this.listenForKeyPresses();
@@ -63,39 +61,42 @@ export class WordleDOM {
         this.submitGuess();
       } else if (key === "backspace") {
         this.removeLastLetter();
-      } else if (/^[a-z]$/.test(key) && this.currentGuess.length < 5) {
+      } else if (
+        /^[a-z]$/.test(key) &&
+        this.game.gameState.currentGuess.length < 5
+      ) {
         this.addLetter(key);
       }
     });
   }
 
   private addLetter(letter: string) {
-    this.currentGuess += letter;
+    this.game.addLetter(letter);
     const letterBox = this.currentLetterBoxes[
-      this.currentGuess.length - 1
+      this.game.gameState.currentGuess.length - 1
     ] as HTMLElement;
     letterBox.textContent = letter.toUpperCase();
   }
 
   private removeLastLetter() {
-    if (this.currentGuess.length > 0) {
+    if (this.game.gameState.currentGuess.length > 0) {
       const letterBox = this.currentLetterBoxes[
-        this.currentGuess.length - 1
+        this.game.gameState.currentGuess.length - 1
       ] as HTMLElement;
       letterBox.textContent = ""; // Clear the letter box
-      this.currentGuess = this.currentGuess.slice(0, -1);
+      this.game.removeLetter();
     }
   }
 
   private submitGuess() {
-    if (this.currentGuess.length !== 5) {
+    if (this.game.gameState.currentGuess.length !== 5) {
       this.message.textContent = "Guess must be 5 letters long.";
       return;
     }
 
     const currentRowBeforeSubmit = this.currentRow;
 
-    const feedback = this.game.makeGuess(this.currentGuess);
+    const feedback = this.game.makeGuess();
     this.updateGameBoard(feedback, currentRowBeforeSubmit);
 
     if (this.game.gameState.isGameOver) {
@@ -105,7 +106,7 @@ export class WordleDOM {
         this.message.textContent = `Game Over! The word was "${this.game.gameState.solution}".`;
       }
     } else {
-      this.currentGuess = "";
+      this.game.gameState.currentGuess = "";
     }
   }
 
