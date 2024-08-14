@@ -10,18 +10,18 @@ export class WordleDOM {
   constructor(word: string) {
     this.game = new Wordle(word);
     this.currentGuess = "";
-    this.createGameBoard();
-    this.createMessageArea();
+    this.gameBoard = this.createGameBoard();
+    this.message = this.createMessageArea();
     this.listenForKeyPresses();
   }
 
-  private get currentRow(): HTMLElement {
-    return this.gameBoard.children[this.game.currentRow] as HTMLElement;
+  private get currentRow() {
+    return this.gameBoard.children[this.game.currentRow];
   }
 
   private createGameBoard() {
-    this.gameBoard = document.createElement("div");
-    this.gameBoard.id = "game-board";
+    const gameBoard = document.createElement("div");
+    gameBoard.id = "game-board";
 
     for (let i = 0; i < 6; i++) {
       const row = document.createElement("div");
@@ -37,14 +37,17 @@ export class WordleDOM {
     }
 
     document.body.appendChild(this.gameBoard);
+    return gameBoard;
   }
 
   private createMessageArea() {
-    this.message = document.createElement("div");
-    this.message.id = "message";
-    this.message.style.marginTop = "20px";
-    this.message.style.fontSize = "1.2rem";
+    const message = document.createElement("div");
+    message.id = "message";
+    message.style.marginTop = "20px";
+    message.style.fontSize = "1.2rem";
     document.body.appendChild(this.message);
+
+    return message;
   }
 
   private listenForKeyPresses() {
@@ -64,23 +67,15 @@ export class WordleDOM {
 
   private addLetter(letter: string) {
     this.currentGuess += letter;
-    const currentRow = this.gameBoard.children[
-      this.game.currentRow
-    ] as HTMLElement;
-    const letterBoxes = currentRow.getElementsByClassName("letter-box");
+    const letterBoxes = this.currentRow.getElementsByClassName("letter-box");
     const letterBox = letterBoxes[this.currentGuess.length - 1] as HTMLElement;
     letterBox.textContent = letter.toUpperCase();
   }
 
   private removeLastLetter() {
     if (this.currentGuess.length > 0) {
-      const currentRow = this.gameBoard.children[
-        this.game.currentRow
-      ] as HTMLElement;
-      const letterBoxes = currentRow.getElementsByClassName("letter-box");
-      const letterBox = letterBoxes[
-        this.currentGuess.length - 1
-      ] as HTMLElement;
+      const letterBoxes = this.currentRow.getElementsByClassName("letter-box");
+      const letterBox = letterBoxes[this.currentGuess.length - 1];
       letterBox.textContent = ""; // Clear the letter box
       this.currentGuess = this.currentGuess.slice(0, -1);
     }
@@ -108,7 +103,7 @@ export class WordleDOM {
     }
   }
 
-  private updateGameBoard(feedback: LetterFeedback[], row: HTMLElement) {
+  private updateGameBoard(feedback: LetterFeedback[], row: Element) {
     const letterBoxes = row.childNodes;
     feedback.forEach((item, index) => {
       const letterBox = letterBoxes[index] as HTMLElement;
