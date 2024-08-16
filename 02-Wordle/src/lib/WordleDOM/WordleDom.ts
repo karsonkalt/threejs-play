@@ -1,5 +1,5 @@
-import { LetterFeedback, LetterStatus } from "./types";
-import { Wordle } from "./Wordle";
+import { LetterFeedback, LetterStatus } from "../types";
+import { Wordle } from "../Wordle";
 
 export class WordleDOM {
   private game: Wordle;
@@ -25,11 +25,13 @@ export class WordleDOM {
     const gameBoard = document.createElement("div");
     gameBoard.id = "game-board";
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < this.game.gameState.maxAttempts; i++) {
       const row = document.createElement("div");
       row.className = "row";
 
-      for (let j = 0; j < 5; j++) {
+      console.log(this.game.gameState.solution.length);
+
+      for (let j = 0; j < this.game.gameState.solution.length; j++) {
         const letterBox = document.createElement("div");
         letterBox.className = "letter-box";
         row.appendChild(letterBox);
@@ -38,7 +40,8 @@ export class WordleDOM {
       gameBoard.appendChild(row);
     }
 
-    document.body.appendChild(gameBoard);
+    const appElement = document.querySelector("#app");
+    appElement?.appendChild(gameBoard);
     return gameBoard;
   }
 
@@ -63,7 +66,8 @@ export class WordleDOM {
         this.removeLastLetter();
       } else if (
         /^[a-z]$/.test(key) &&
-        this.game.gameState.currentGuess.length < 5
+        this.game.gameState.currentGuess.length <
+          this.game.gameState.solution.length
       ) {
         this.addLetter(key);
       }
@@ -89,8 +93,11 @@ export class WordleDOM {
   }
 
   private submitGuess() {
-    if (this.game.gameState.currentGuess.length !== 5) {
-      this.message.textContent = "Guess must be 5 letters long.";
+    if (
+      this.game.gameState.currentGuess.length !==
+      this.game.gameState.solution.length
+    ) {
+      this.message.textContent = `Guess must be ${this.game.gameState.solution.length} letters long.`;
       return;
     }
 

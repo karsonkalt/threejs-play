@@ -3,19 +3,29 @@ body {
     padding: 0;
     width: 100vw;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#app {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #game-board {
-    display: grid;
-    grid-template-columns: repeat(5, 50px);
-    grid-template-rows: repeat(6, 50px);
-    grid-gap: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     justify-content: center;
     align-content: center;
 }
 
 .row {
-    display: contents;
+    display: flex;
+    gap: 5px;
 }
 
 .letter-box {

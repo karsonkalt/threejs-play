@@ -1,6 +1,4 @@
 import { getRandomSolution } from "./lib/solutions";
-// import { WordleDOM } from "./lib/WordleDom";
-import { WordleThree } from "./lib/Three/WordleThree";
+import { WordleDOM } from "./lib/WordleDOM/WordleDom";
 
-// new WordleDOM(getRandomSolution());
-WordleThree();
+new WordleDOM(getRandomSolution());
