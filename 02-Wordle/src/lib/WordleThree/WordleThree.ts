@@ -7,8 +7,10 @@ export const WordleThree = () => {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     canvas,
+    alpha: true,
   });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
 
   const fov = 75;
@@ -16,50 +18,37 @@ export const WordleThree = () => {
   const near = 0.1;
   const far = 1000;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  camera.position.set(0, 10, 0);
-  camera.lookAt(0, 0, 0);
+  camera.position.set(0, 6, 3.75);
 
   const scene = new THREE.Scene();
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2);
   scene.add(ambientLight);
 
   const spotlight = new THREE.SpotLight(0xffffff, 0.5);
   spotlight.position.set(0, 10, 0);
 
-  const planeWidth = 13;
-  const planeHeight = 5;
-
-  const geometry = new THREE.BoxGeometry(planeWidth, planeHeight, 0.2);
-  const material = new THREE.MeshPhysicalMaterial({
-    color: 0xd3d3d3, // Light grey
-    roughness: 0.5,
-    metalness: 0,
-  });
-  const plane = new THREE.Mesh(geometry, material);
-  plane.receiveShadow = true;
-  plane.rotateX(-Math.PI / 2);
-
-  plane.position.set(5.5, -0.1, 1);
-  scene.add(plane);
-
+  const KEY_GAP = 1.2;
   ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"].forEach(
     (letter, index) => {
+      const LEFT_OFFSET = 6;
       const key = new Key(letter).getInstance();
-      key.position.set(index * 1.2, 0, 0);
+      key.position.set(-LEFT_OFFSET + index * KEY_GAP, 0, 0);
       scene.add(key);
     }
   );
 
   ["A", "S", "D", "F", "G", "H", "J", "K", "L"].forEach((letter, index) => {
+    const LEFT_OFFSET = 5.4;
     const key = new Key(letter).getInstance();
-    key.position.set(0.5 + index * 1.2, 0, 1.2);
+    key.position.set(-LEFT_OFFSET + index * KEY_GAP, 0, 1.2);
     scene.add(key);
   });
 
   ["Z", "X", "C", "V", "B", "N", "M"].forEach((letter, index) => {
+    const LEFT_OFFSET = 4.8;
     const key = new Key(letter).getInstance();
-    key.position.set(1 + index * 1.2, 0, 2.4);
+    key.position.set(-LEFT_OFFSET + index * KEY_GAP, 0, 2.4);
     scene.add(key);
   });
 

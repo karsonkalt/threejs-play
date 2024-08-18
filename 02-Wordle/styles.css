@@ -23,6 +23,11 @@ body {
     align-content: center;
 }
 
+#canvas {
+    width: 900px;
+    height: 300px;
+}
+
 .row {
     display: flex;
     gap: 5px;
