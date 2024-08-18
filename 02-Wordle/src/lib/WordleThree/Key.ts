@@ -26,8 +26,8 @@ export class Key {
       const material = new THREE.MeshStandardMaterial({ color: 0xd3d3d3 });
       const geometry = new TextGeometry(letter, {
         font: font,
-        size: 0.4, // Adjust size to fit on top of the cube
-        height: 0.05, // Adjust height to make it look like a keyboard button
+        size: 0.4,
+        height: 0.05,
         curveSegments: 12,
         bevelEnabled: true,
         bevelThickness: 0.01,
@@ -42,7 +42,6 @@ export class Key {
 
       document.addEventListener("keydown", (event) => {
         if (event.key.toUpperCase() === this.letter) {
-          // turn it yello
           this.cube.material = new THREE.MeshPhysicalMaterial({
             color: this.pressedColor,
             roughness: 0.5,
@@ -58,7 +57,6 @@ export class Key {
 
       document.addEventListener("keyup", (event) => {
         if (event.key.toUpperCase() === this.letter) {
-          // turn it yello
           this.cube.material = new THREE.MeshPhysicalMaterial({
             color: this.defaultColor,
             roughness: 0.5,
@@ -76,17 +74,5 @@ export class Key {
 
   public getInstance(): THREE.Mesh {
     return this.cube;
-  }
-
-  public setPosition(x: number, y: number, z: number): void {
-    this.cube.position.set(x, y, z);
-  }
-
-  public setScale(x: number, y: number, z: number): void {
-    this.cube.scale.set(x, y, z);
-  }
-
-  public static createDefault(): LetterCube {
-    return new LetterCube();
   }
 }

@@ -7,7 +7,6 @@ export const WordleThree = () => {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     canvas,
-    // alpha: true,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
@@ -28,8 +27,8 @@ export const WordleThree = () => {
   const spotlight = new THREE.SpotLight(0xffffff, 0.5);
   spotlight.position.set(0, 10, 0);
 
-  const planeWidth = 13; // Adjust width as needed
-  const planeHeight = 5; // Adjust height as needed
+  const planeWidth = 13;
+  const planeHeight = 5;
 
   const geometry = new THREE.BoxGeometry(planeWidth, planeHeight, 0.2);
   const material = new THREE.MeshPhysicalMaterial({
@@ -41,7 +40,7 @@ export const WordleThree = () => {
   plane.receiveShadow = true;
   plane.rotateX(-Math.PI / 2);
 
-  plane.position.set(5.5, -0.1, 1); // Adjust position as needed
+  plane.position.set(5.5, -0.1, 1);
   scene.add(plane);
 
   ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"].forEach(
