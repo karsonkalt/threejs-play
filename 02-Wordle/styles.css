@@ -7,12 +7,27 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    font-family: sans-serif;
+
+    --color-keyboard: rgba(65, 65, 65, 0.116);
 }
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #333;
+        color: white;
+        --color-keyboard: rgba(255, 255, 255, 0.116);
+    }
+}
+
+
 
 #app {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    gap: 20px;
 }
 
 #game-board {
@@ -23,9 +38,110 @@ body {
     align-content: center;
 }
 
-#canvas {
-    width: 900px;
-    height: 300px;
+#message {
+    font-size: 1rem;
+    padding: 5px 10px;
+    border-radius: 50px;
+    background-color: rgba(139, 126, 25, 0.69);
+    color: white;
+    text-align: center;
+    height: 20px;
+    opacity: 0;
+}
+
+#message:not(:empty) {
+    animation: fadeInPauseOut 0.5s ease-in-out;
+}
+
+@keyframes fadeInPauseOut {
+    0% {
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+#keyboard {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    perspective: 1000px;
+
+} 
+
+  .keyboard-row {
+    margin-top: 2px;
+    display: flex;
+    justify-content: center; 
+    gap: 5px;   
+    transform-style: preserve-3d;
+    transform: rotateX(30deg);
+  }
+
+  .keyboard-row:nth-child(2) {
+    padding-left: 0px; 
+  }
+  
+  .keyboard-row:nth-child(3) {
+    padding-left: 30px;
+  }
+
+  .keyboard-key {
+    font-family: sans-serif;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border-radius: 6px;
+    background-color: var(--color-keyboard);
+    text-transform: uppercase;
+    transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
+    cursor: pointer;
+     user-select: none;
+  }
+
+  .keyboard-key:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateZ(8px);
+  }
+
+  .keyboard-key:active,
+  .keyboard-key.active {
+        transform: translateZ(-8px)
+  }
+
+  .keyboard-key:active::after,
+  .keyboard-key.active::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+}   
+
+.keyboard-key-submit {
+    width: 80px;
+    background-color: rgb(48, 89, 184);
+    color: white;
+    font-size: .8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 6px;
+    transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
+}
+
+.keyboard-key-submit:hover {
+    background-color: rgba(67, 110, 211, 0.8);
 }
 
 .row {
@@ -34,7 +150,6 @@ body {
 }
 
 .letter-box {
-    font-family: sans-serif;
     width: 50px;
     height: 50px;
     display: flex;
@@ -42,25 +157,13 @@ body {
     justify-content: center;
     font-size: 1.5rem;
     border-radius: 6px;
-    background-color: rgb(222, 222, 222);
+    background-color: var(--color-keyboard);
     text-transform: uppercase;
     transition: background-color 100ms;
 }
 
 .letter-box:not(:empty) {
-    animation: grow 250ms ease-in-out;
-}
-
-@keyframes grow {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
+    
 }
 
 .correct {
@@ -69,16 +172,12 @@ body {
 }
 
 .present {
-    background-color: rgb(228, 228, 48);
+
+    background-color: rgb(218, 218, 83);
     color: black;
 }
 
 .absent {
     background-color: rgb(130, 130, 130);
     color: white;
-}
-
-#message {
-    margin-top: 20px;
-    font-size: 1.2rem;
 }
