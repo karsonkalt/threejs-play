@@ -24,6 +24,10 @@ export default class HelloWorldScene extends Phaser.Scene {
       frameWidth: 48,
       frameHeight: 32,
     });
+    this.load.spritesheet("frog_explode", "assets/frog/frog_explode.png", {
+      frameWidth: 48,
+      frameHeight: 32,
+    });
   }
 
   create() {
@@ -49,7 +53,7 @@ export default class HelloWorldScene extends Phaser.Scene {
     // PLAYER ANIMATIONS
     this.anims.create({
       key: "hop",
-      frames: this.anims.generateFrameNumbers("frog_hop", { start: 0, end: 8 }),
+      frames: this.anims.generateFrameNumbers("frog_hop", { start: 3, end: 6 }),
       frameRate: 6,
       repeat: -1,
     });
@@ -61,6 +65,15 @@ export default class HelloWorldScene extends Phaser.Scene {
       }),
       frameRate: 6,
       repeat: -1,
+    });
+    this.anims.create({
+      key: "explode",
+      frames: this.anims.generateFrameNumbers("frog_explode", {
+        start: 0,
+        end: 8,
+      }),
+      frameRate: 6,
+      repeat: 1,
     });
 
     // STARS
@@ -89,14 +102,14 @@ export default class HelloWorldScene extends Phaser.Scene {
     const bombs = this.physics.add.group({
       key: "bomb",
       repeat: 3,
-      setXY: { x: 50, y: 200, stepX: 200 },
+      setXY: { x: 58, y: 200, stepX: 200 },
     });
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
     function hitBomb(player, bomb) {
       this.physics.pause();
       player.setTint(0xff0000);
-      player.anims.play("turn");
+      player.anims.play("explode", true);
     }
   }
 
