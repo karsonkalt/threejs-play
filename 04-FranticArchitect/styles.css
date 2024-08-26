@@ -15,10 +15,67 @@ canvas {
 
 #controls {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgb(255, 255, 255);
+    font-family: monospace;
+    z-index: 1000;
+
+    &.hidden {
+        display: none;
+    }
+
+    #restart {
+        backdrop-filter: blur(5px);
+        background-color: rgba(73, 73, 73, 0.738);
+        border-radius: 4px;
+        padding: 2px 4px;
+        color: rgb(43, 233, 211);
+        cursor: pointer;
+        border: none;
+        padding: 10px;
+        font-size: 16px;
+        transition: transform 0.1s;
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.39);
+            transform: scale(1.1);
+        }
+    }
+}
+
+#info {
+    position: absolute;
     left: 1em;
     top: 1em;
     padding: 1em;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
+    background: rgba(255, 255, 255, 0.117);
+    color: rgb(255, 255, 255);
     font-family: monospace;
+    z-index: 1000;
+    border-radius: 8px;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .key {
+        background-color: rgba(255, 255, 255, 0.117);
+        border-radius: 4px;
+        padding: 2px 4px;
+        color:rgb(43, 233, 211);
+    }
+
+    p {
+        margin: 0;
+    }
+
+    #timer-container {
+        display: inline-flex;
+        gap: 8px;
+    }
+    #timer {
+        display: inline;
+        color: red;
+    }
   }
