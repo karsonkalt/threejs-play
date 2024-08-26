@@ -5,10 +5,15 @@ import CannonDebugger from "cannon-es-debugger";
 
 const canvas = document.querySelector("canvas") as HTMLCanvasElement;
 const timer = document.querySelector("#timer") as HTMLDivElement;
+const height = document.querySelector("#height") as HTMLDivElement;
 const controlsElement = document.querySelector("#controls") as HTMLDivElement;
 
 function updateTimer(time: number) {
   timer.innerText = time.toFixed(1);
+}
+
+function increaseHeight() {
+  height.innerText = (Number(height.innerText) + 1).toString();
 }
 
 function initializeRenderer(canvas: HTMLCanvasElement) {
@@ -184,6 +189,7 @@ function createPreviewBlock() {
 
 function placeBlock() {
   if (!getLastBlock()) return;
+  if (previewBlockPosition === "top") increaseHeight();
 
   const lastBlock = getLastBlock();
 
