@@ -69,13 +69,4 @@ canvas {
     p {
         margin: 0;
     }
-
-    #timer-container {
-        display: inline-flex;
-        gap: 8px;
-    }
-    #timer {
-        display: inline;
-        color: red;
-    }
   }

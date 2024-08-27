@@ -2,16 +2,13 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
+import { PALETTES } from "./colorPalettes";
 
 const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-const timer = document.querySelector("#timer") as HTMLDivElement;
 const height = document.querySelector("#height") as HTMLDivElement;
 const controlsElement = document.querySelector("#controls") as HTMLDivElement;
 
-function updateTimer(time: number) {
-  timer.innerText = time.toFixed(1);
-}
-
+const palette = PALETTES.SUNSET;
 function increaseHeight() {
   height.innerText = (Number(height.innerText) + 1).toString();
 }
@@ -41,6 +38,38 @@ function initializeCamera() {
 const camera = initializeCamera();
 
 const scene = new THREE.Scene();
+
+function initializeParticles(scene: THREE.Scene) {
+  const particleCount = 500; // Number of particles
+  const particlesGeometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3); // Each particle has 3 coordinates (x, y, z)
+
+  for (let i = 0; i < particleCount; i++) {
+    const x = (Math.random() - 0.5) * 100; // Spread particles out in space
+    const y = (Math.random() - 0.5) * 100;
+    const z = (Math.random() - 0.5) * 100;
+    positions.set([x, y, z], i * 3);
+  }
+
+  particlesGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positions, 3)
+  );
+
+  const particlesMaterial = new THREE.PointsMaterial({
+    color: 0xffffff, // Particle color
+    size: 0.2, // Size of each particle
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particles);
+}
+
+initializeParticles(scene);
 
 function initializeLights(scene: THREE.Scene) {
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -78,7 +107,7 @@ const world = initializePhysicsWorld();
 
 function createGround(scene: THREE.Scene, world: CANNON.World) {
   const ground = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 0.4, 4),
+    new THREE.BoxGeometry(3, 0.4, 3),
     new THREE.MeshPhysicalMaterial({
       color: 0xaaaaaa,
       metalness: 0.3,
@@ -91,7 +120,7 @@ function createGround(scene: THREE.Scene, world: CANNON.World) {
 
   const groundBody = new CANNON.Body({
     mass: 0,
-    shape: new CANNON.Box(new CANNON.Vec3(2, 0.2, 2)),
+    shape: new CANNON.Box(new CANNON.Vec3(1.5, 0.2, 1.5)),
     type: CANNON.Body.STATIC,
   });
 
@@ -104,9 +133,15 @@ createGround(scene, world);
 
 const blocks = [];
 
+function isCollidingWithExistingBlocks(potentialNewBlockPosition: CANNON.Vec3) {
+  return blocks.some(({ blockBody }) => {
+    const distance = blockBody.position.distanceTo(potentialNewBlockPosition);
+    return distance <= 0.5; // Assuming blocks are of size 1x1x1
+  });
+}
+
 function createBlock(position: CANNON.Vec3) {
-  const blues = [0x00aaff, 0x00ddff, 0x00ffff];
-  const color = blues[Math.floor(Math.random() * blues.length)];
+  const color = palette[Math.floor(Math.random() * palette.length)];
 
   const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
   const blockMaterial = new THREE.MeshPhysicalMaterial({
@@ -125,7 +160,7 @@ function createBlock(position: CANNON.Vec3) {
 
   const blockShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
   const blockBody = new CANNON.Body({
-    mass: 1,
+    mass: 10,
     position: position.clone(),
     shape: blockShape,
   });
@@ -142,36 +177,92 @@ const getLastBlock = () => blocks[blocks.length - 1];
 
 const getNumberOfBlocks = () => blocks.length;
 
-const getCurrentBlockTime = () => {
-  return 8 - getNumberOfBlocks() * 0.1;
+const getPreviewBlockChangeRate = () => {
+  // as more blocks are placed,
+  // return the wait time in ms
+  const numBlocks = getNumberOfBlocks();
+  if (numBlocks < 5) return 800;
+  if (numBlocks < 10) return 700;
+  if (numBlocks < 15) return 600;
+  if (numBlocks < 20) return 500;
+  if (numBlocks < 25) return 400;
+  if (numBlocks < 30) return 300;
+  if (numBlocks < 35) return 200;
+  return 100;
 };
 
-let blockTimer = getCurrentBlockTime();
+function changePreviewBlockAfterDelay() {
+  setTimeout(() => {
+    const directions = ["top", "front", "back", "left", "right"];
+    const randomDirection =
+      directions[Math.floor(Math.random() * directions.length)];
+
+    rotatePreviewBlock(randomDirection);
+
+    // Continue changing the position after each interval
+    changePreviewBlockAfterDelay();
+  }, getPreviewBlockChangeRate());
+}
+
 let blockBlink = false;
 let previewBlock = createPreviewBlock();
+changePreviewBlockAfterDelay();
 let previewBlockPosition: "top" | "left" | "right" | "front" | "back" = "left";
 
-const syncPreviewBlock = () => {
-  previewBlock.position.copy(getLastBlock().block.position);
-  previewBlock.rotation.copy(getLastBlock().block.rotation);
+function syncPreviewBlock() {
+  let potentialPosition = getLastBlock().block.position.clone();
   switch (previewBlockPosition) {
     case "top":
-      previewBlock.position.y += 1;
+      potentialPosition.y += 1;
       break;
     case "front":
-      previewBlock.position.z -= 1;
+      potentialPosition.z -= 1;
       break;
     case "back":
-      previewBlock.position.z += 1;
+      potentialPosition.z += 1;
       break;
     case "left":
-      previewBlock.position.x -= 1;
+      potentialPosition.x -= 1;
       break;
     case "right":
-      previewBlock.position.x += 1;
+      potentialPosition.x += 1;
       break;
   }
-};
+
+  if (!isCollidingWithExistingBlocks(potentialPosition)) {
+    previewBlock.position.copy(potentialPosition);
+  } else {
+    previewBlockPosition = "top";
+  }
+}
+
+function createGoal(y: number) {
+  // make a hollow block at the given height
+  const blockGeometry = new THREE.BoxGeometry(5, 0.1, 5);
+  const edges = new THREE.EdgesGeometry(blockGeometry);
+  const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0xffff00,
+    transparent: true,
+    opacity: 0.7,
+  });
+  const lineSegments = new THREE.LineSegments(edges, lineMaterial);
+  lineSegments.position.set(0, y, 0);
+  scene.add(lineSegments);
+}
+
+createGoal(7);
+
+function isPastGoal(y: number) {
+  return y >= 7;
+}
+
+// if the last block y is higher than the goal, then change bgcolor of the scene
+function checkGoal() {
+  if (isPastGoal(getLastBlock().block.position.y)) {
+    // make bg yellow
+    scene.background = new THREE.Color(0x616050);
+  }
+}
 
 function createPreviewBlock() {
   const blockGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -211,7 +302,6 @@ function placeBlock() {
 
   blocks.push(newBlock);
 }
-const increaseBlocksArray = generateCountArray([6, 6, 5, 5, 4, 4, 3, 2, 1]);
 
 function updatePreviewBlockPosition() {
   if (getLastBlock()) {
@@ -270,25 +360,10 @@ function rotatePreviewBlock(direction: string) {
   }
 }
 
-function generateCountArray(array: number[]) {
-  let count = 0;
-  return array.map((num) => (count += num));
-}
-
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Shift") {
-    if (increaseBlocksArray.includes(getNumberOfBlocks())) {
-      rotatePreviewBlock("top");
-    } else {
-      rotatePreviewBlock(
-        ["right", "left", "front", "back"][Math.floor(Math.random() * 4)]
-      );
-    }
-  }
   if (event.key === "Enter") {
     placeBlock();
     updatePreviewBlockPosition();
-    blockTimer = getCurrentBlockTime();
   }
 });
 
@@ -315,34 +390,21 @@ function animate() {
     block.quaternion.copy(blockBody.quaternion as unknown as THREE.Quaternion);
   });
 
-  blockTimer -= 1 / 120;
-  updateTimer(blockTimer);
-
-  const blinkInterval = Math.max(0.25, blockTimer / 2);
-  blockBlink = Math.floor((2 - blockTimer) / blinkInterval) % 2 === 0;
-  previewBlock.material.color.setHex(blockBlink ? 0xffffff : 0xff0000);
-
-  if (blockTimer <= 0) {
-    placeBlock();
-    updatePreviewBlockPosition();
-    blockTimer = getCurrentBlockTime();
-  }
-
   cameraAngle += cameraSpeed;
 
   const lastBlockPosition = getLastBlock().block.position;
   const cameraX = lastBlockPosition.x + cameraRadius * Math.cos(cameraAngle);
   const cameraZ = lastBlockPosition.z + cameraRadius * Math.sin(cameraAngle);
-  const cameraY = lastBlockPosition.y + 5; // Adjust Y to keep a good viewing angle
+  const cameraY = lastBlockPosition.y + 6; // Adjust Y to keep a good viewing angle
 
   camera.position.set(cameraX, cameraY, cameraZ);
   camera.lookAt(lastBlockPosition);
 
   syncPreviewBlock();
+  checkGoal();
 
   if (isCurrentBlockUnderPlatform() && !gameOver) {
     gameOver = true;
-    console.log("Game Over");
     controlsElement.classList.remove("hidden");
   }
 
